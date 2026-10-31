@@ -9,56 +9,76 @@
 int my_strlen(char const *str)
 {
     int i = 0;
-    while (str[i] != '\0') {
+
+    while (str[i] != '\0')
         i++;
-    }
     return (i);
 }
 
-int my_lenligne(char const *str)
+static int line_len(char const *str)
 {
-    int cpt = 0;
-    for (int i = 0; str[i] != '\n'; i++) {
-        cpt++;
-    }
-    return cpt;
+    int len = 0;
+
+    while (str[len] != '\0' && str[len] != '\n')
+        len++;
+    if (len > 0 && str[len - 1] == '\r')
+        len--;
+    return len;
 }
 
-int lenmot(char const *str, int j)
+static int is_blank(char const *str, int len)
 {
-    int cpt = 0;
-    while (j < my_strlen(str) && str[j] != '\n') {
-        j++;
-        cpt++;
-    }
-    return cpt;
+    for (int i = 0; i < len; i++)
+        if (str[i] != ' ' && str[i] != '\t')
+            return 0;
+    return 1;
 }
 
-void getmot(char const *str, char **result, int e, int *j)
+static int count_lines(char const *str)
 {
-    int a = 0;
-    for (*j; str[*j] != '\n'; *j = *j + 1) {
-        result[e][a] = str[*j];
-        a++;
+    int count = 0;
+    int len = 0;
+
+    while (*str != '\0') {
+        len = line_len(str);
+        if (!is_blank(str, len))
+            count++;
+        while (*str != '\0' && *str != '\n')
+            str++;
+        if (*str == '\n')
+            str++;
     }
-    result[e][a] = '\0';
-    *j = *j + 1;
-    return;
+    return count;
+}
+
+static char *copy_line(char const *str, int len)
+{
+    char *line = malloc(sizeof(char) * (len + 1));
+
+    if (line == NULL)
+        return NULL;
+    for (int i = 0; i < len; i++)
+        line[i] = str[i];
+    line[len] = '\0';
+    return line;
 }
 
 char **my_str_to_word_array(char const *str)
 {
+    char **result = malloc(sizeof(char *) * (count_lines(str) + 1));
     int e = 0;
-    char **result;
-    int len_phrase = lentotal(str);
-    int a = cptmot(str);
-    result = malloc(sizeof(char *) * (len_phrase + 1));
-    for (int i = 0; i < a; i++) {
-        result[i] = malloc(sizeof(char) * my_strlen(str) + 1);
-    }
-    int j = 0;
-    for (e; e < a - 1; e++) {
-        getmot(str, result, e, &j);
+    int len = 0;
+
+    if (result == NULL)
+        return NULL;
+    while (*str != '\0') {
+        len = line_len(str);
+        if (!is_blank(str, len))
+            result[e++] = copy_line(str, len);
+        while (*str != '\0' && *str != '\n')
+            str++;
+        if (*str == '\n')
+            str++;
     }
     result[e] = NULL;
     return result;

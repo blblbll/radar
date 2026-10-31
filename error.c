@@ -6,45 +6,50 @@
 */
 #include "./include/my.h"
 
-int verif_line_avion(char **liste, int j)
+static int is_space(char c)
 {
-    int cptnb = 0;
-    for (int i = 0; liste[j][i] != '\0'; i++)
-        if (liste[j][i] == ' ' && (liste[j][i + 1] >= '0'
-        && liste[j][i + 1] <= '9'))
-            cptnb++;
-
-    if (cptnb != 6)
-        return 84;
-    return 0;
+    return (c == ' ' || c == '\t');
 }
 
-int verif_line_tower(char **liste, int j)
+static int count_numbers(char const *line)
 {
-    int cptnb = 0;
-    for (int i = 0; liste[j][i] != '\0'; i++)
-        if (liste[j][i] == ' ' && (liste[j][i + 1] >= '0'
-        && liste[j][i + 1] <= '9'))
-            cptnb++;
+    int i = 1;
+    int count = 0;
 
-    if (cptnb != 3)
-        return 84;
-    return 0;
+    if (!is_space(line[i]))
+        return -1;
+    while (line[i] != '\0') {
+        while (is_space(line[i]))
+            i++;
+        if (line[i] == '\0')
+            break;
+        if (line[i] < '0' || line[i] > '9')
+            return -1;
+        while (line[i] >= '0' && line[i] <= '9')
+            i++;
+        if (line[i] != '\0' && !is_space(line[i]))
+            return -1;
+        count++;
+    }
+    return count;
+}
+
+static int verif_line(char **liste, int j)
+{
+    char type = liste[j][0];
+
+    if (type == 'A')
+        return (count_numbers(liste[j]) == 6) ? 0 : 84;
+    if (type == 'T')
+        return (count_numbers(liste[j]) == 3) ? 0 : 84;
+    return 84;
 }
 
 int error_lines(char **liste)
 {
     for (int j = 0; liste[j] != NULL; j++) {
-        if (liste[j][0] != 'A' && liste[j][0] != 'T') {
-            write(2, "invalid dataa", 13);
-            return 84;
-        }
-        if (liste[j][0] == 'A' && verif_line_avion(liste, j) == 84) {
-            write(2, "invalid data", 12);
-            return 84;
-        }
-        if (liste[j][0] == 'T' && verif_line_tower(liste, j) == 84) {
-            write(2, "invalid data", 12);
+        if (verif_line(liste, j) == 84) {
+            my_puterr("invalid data\n");
             return 84;
         }
     }

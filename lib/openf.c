@@ -6,19 +6,46 @@
 */
 #include "../include/my.h"
 
+static char *read_all(int fd, long size)
+{
+    char *buff = malloc(sizeof(char) * (size + 1));
+    long total = 0;
+    long n = 0;
+
+    if (buff == NULL)
+        return NULL;
+    while (total < size) {
+        n = read(fd, buff + total, size - total);
+        if (n <= 0)
+            break;
+        total += n;
+    }
+    buff[total] = '\0';
+    if (n < 0) {
+        free(buff);
+        return NULL;
+    }
+    return buff;
+}
+
 char *fs_open_file(const char *pathfile)
 {
     struct stat stati;
     char *buff;
-    int fd = open(pathfile, O_RDONLY);
-    if (fd < 0) {
-        write(2, "file cannot be read", 19);
+    int fd;
+
+    if (stat(pathfile, &stati) == -1 || !S_ISREG(stati.st_mode)) {
+        my_puterr("file cannot be read\n");
         return NULL;
     }
-    stat(pathfile, &stati);
-    int taille = stati.st_size;
-    buff = malloc(sizeof(char) * (taille + 2));
-    read(fd, buff, taille);
-    buff[taille] = '\0';
-    return (buff);
+    fd = open(pathfile, O_RDONLY);
+    if (fd < 0) {
+        my_puterr("file cannot be read\n");
+        return NULL;
+    }
+    buff = read_all(fd, stati.st_size);
+    close(fd);
+    if (buff == NULL)
+        my_puterr("file cannot be read\n");
+    return buff;
 }
